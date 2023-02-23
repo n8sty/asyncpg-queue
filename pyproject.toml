@@ -1,0 +1,142 @@
+[tool.poetry]
+name = "asyncpg-queue"
+version = "0.1.0"
+description = ""
+authors = ["nate giraldi <ng269@cornell.edu>"]
+readme = "README.md"
+packages = [
+  {include = "asyncpg_queue"},
+  {include = "asyncpg_queue/py.typed"},
+]
+license = "MIT"
+classifiers = [
+  "Development Status :: 4 - Beta",
+	"Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+asyncpg = "<0.28,>=0.26"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+mypy = "^1.0.1"
+ruff = "*"
+vulture = "^2.7"
+
+[tool.poetry.group.test.dependencies]
+docker = "^6.0.1"
+nox = "^2022.11.21"
+pytest = "^7.2.0"
+pytest-asyncio = "^0.20.3"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.10.0"
+pytest-randomly = "^3.12.0"
+pytest-timeout = "^2.1.0"
+
+[tool.black]
+include = '\.pyi?$'
+
+[tool.coverage.paths]
+source = ["asyncpg_queue"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "if typing.TYPE_CHECKING:",
+  "if __name__ == \"__main__\":",
+  "if settings().debug",
+  "log.*"
+]
+fail_under = 100
+show_missing = true
+skip_empty = true
+
+[tool.coverage.run]
+branch = true
+source = ["asyncpg_queue"]
+
+[tool.mypy]
+strict = true
+enable_error_code = ["ignore-without-code"]
+enable_incomplete_feature = ["Unpack"]
+
+[[tool.mypy.overrides]]
+module = [
+  "asyncpg.*",
+  "docker.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+norecursedirs = [
+  ".venv",
+  "dist",
+  "build",
+  "docs",
+  ".git",
+  "__pycache__",
+]
+addopts = [
+  "-r fEsx",
+  "--failed-first",
+  "--new-first",
+  "--strict-config",
+  "--strict-markers",
+  "--tb=short",
+  "--doctest-modules",
+  "--cov",
+  "--cov-config=pyproject.toml",
+  "--asyncio-mode=auto",
+  "--show-capture=no",
+]
+filterwarnings = [
+  "ignore:.*is being released to the pool but has 1 active notification listener:asyncpg.InterfaceWarning",
+]
+# pytest-timeout is a steamroller, but a useful one when running complicated and
+# potentially hacky async tests like this library currently relies on. Sometimes these
+# tests, if written incorrectly which may or may not have happened during development,
+# may find themselves in a hung state, which the timeout will unceremoniously
+# steamroll.
+timeout = 30
+
+[tool.ruff]
+external = [
+  "V101"  # Vulture is not supported by Ruff
+]
+fix = true
+select = [
+  "F",  # Pyflakes
+  "E", "W",  # pycodestyle
+  "W",
+  "C",  # mccabe
+  "I",  # isort
+  "S",  # flake8-bandit
+  "B",  # flake8-bugbear
+  "D",  # pydocstyle
+]
+ignore = [
+  "D100",  # docstring in public module
+  "D203",  # conflicts with D211
+  "D212",  # conflicts with D212
+]
+
+[tool.ruff.isort]
+lines-after-imports = -1
+
+[tool.ruff.per-file-ignores]
+"example/*" = ["D"]
+"test/*" = ["S101", "D"]
+
+[tool.vulture]
+min_confidence = 100
+paths= ["asyncpg_queue", "test"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
